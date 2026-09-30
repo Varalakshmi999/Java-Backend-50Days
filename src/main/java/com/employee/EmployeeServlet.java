@@ -1,40 +1,52 @@
 package com.employee;
 
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.*;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
 @WebServlet("/employees")
 public class EmployeeServlet extends HttpServlet {
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        EmployeeDAO dao = new EmployeeDAO();
-        List<Employee> list = dao.getAllEmployees();
-        response.setContentType("text/html");
-        var out = response.getWriter();
-        out.println("<html><body>");
-        out.println("<h2>Employee List - Day 8/9</h2>");
-        out.println("<a href='add-employee.html'>Add New Employee</a><br><br>");
-        out.println("<table border='1' cellpadding='10'>");
-        out.println("<tr><th>ID</th><th>Name</th><th>Email</th><th>Salary</th></tr>");
-        for (Employee e : list) {
-            out.println("<tr><td>" + e.getId() + "</td><td>" + e.getName() + "</td><td>" + e.getEmail() + "</td><td>" + e.getSalary() + "</td></tr>");
-        }
-        out.println("</table></body></html>");
-    }
+    private EmployeeDAO employeeDAO;
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String name = request.getParameter("name");
-        String email = request.getParameter("email");
-        double salary = Double.parseDouble(request.getParameter("salary"));
-        Employee emp = new Employee(name, email, salary);
-        new EmployeeDAO().addEmployee(emp);
-        response.sendRedirect("employees");
+    public void init() {
+        employeeDAO = new EmployeeDAO();
+    }
+
+    // DAY 10 - JSP Forwarding
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        try {
+            List<Employee> list = employeeDAO.getAllEmployees();
+            req.setAttribute("empList", list);
+            RequestDispatcher rd = req.getRequestDispatcher("employees.jsp");
+            rd.forward(req, resp);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ServletException(e);
+        }
+    }
+
+    // DAY 9 - Form to DB
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        try {
+            String name = req.getParameter("name");
+            String email = req.getParameter("email");
+            double salary = Double.parseDouble(req.getParameter("salary"));
+
+            Employee emp = new Employee(name, email, salary);
+            employeeDAO.addEmployee(emp);
+
+            resp.sendRedirect("employees");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
