@@ -2,6 +2,7 @@ package com.employee;
 import java.sql.*;
 
 public class EmployeeDAO {
+
     public boolean addEmployee(Employee emp) {
         String sql = "INSERT INTO employees (name, email, salary) VALUES (?, ?, ?)";
         try (Connection con = DBConnection.getConnection();
@@ -15,13 +16,34 @@ public class EmployeeDAO {
             return false;
         }
     }
+
+    public java.util.List<Employee> getAllEmployees() {
+        java.util.List<Employee> list = new java.util.ArrayList<>();
+        String sql = "SELECT * FROM employees";
+        try (Connection con = DBConnection.getConnection();
+             Statement st = con.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                Employee e = new Employee(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("email"),
+                        rs.getDouble("salary")
+                );
+                list.add(e);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public static void main(String[] args) {
         EmployeeDAO dao = new EmployeeDAO();
-        Employee e1 = new Employee("Varalakshmi", "veluguladurgavaralakshmi@gmail.com", 50000);
-        if(dao.addEmployee(e1)) {
-            System.out.println("✅ Employee Inserted Successfully! Day 4 Rocking!");
-        } else {
-            System.out.println("❌ Failed!");
+        System.out.println("--- All Employees from DB ---");
+        for (Employee e : dao.getAllEmployees()) {
+            System.out.println(e);
         }
+        System.out.println("✅ Day 5 - Fetch Success!");
     }
 }
