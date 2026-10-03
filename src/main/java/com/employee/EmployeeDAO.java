@@ -1,112 +1,79 @@
 package com.employee;
+
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EmployeeDAO {
 
     public boolean addEmployee(Employee emp) {
-        String sql = "INSERT INTO employees (name, email, salary) VALUES (?, ?, ?)";
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        boolean rowInserted = false;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement("INSERT INTO employees (name, email, salary) VALUES (?, ?, ?)")) {
             ps.setString(1, emp.getName());
             ps.setString(2, emp.getEmail());
             ps.setDouble(3, emp.getSalary());
-            return ps.executeUpdate() > 0;
+            rowInserted = ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
         }
+        return rowInserted;
     }
 
-    public java.util.List<Employee> getAllEmployees() {
-        java.util.List<Employee> list = new java.util.ArrayList<>();
-        String sql = "SELECT * FROM employees";
-        try (Connection con = DBConnection.getConnection();
-             Statement st = con.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
+    public List<Employee> getAllEmployees() {
+        List<Employee> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM employees");
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                list.add(new Employee(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getString("email"),
-                        rs.getDouble("salary")
-                ));
+                Employee emp = new Employee(rs.getInt("id"), rs.getString("name"), rs.getString("email"), rs.getDouble("salary"));
+                list.add(emp);
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return list;
     }
 
+    public boolean deleteEmployee(int id) {
+        boolean rowDeleted = false;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM employees WHERE id=?")) {
+            ps.setInt(1, id);
+            rowDeleted = ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return rowDeleted;
+    }
+
     public Employee getEmployeeById(int id) {
-        String sql = "SELECT * FROM employees WHERE id = ?";
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Employee emp = null;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM employees WHERE id=?")) {
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return new Employee(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getString("email"),
-                        rs.getDouble("salary")
-                );
+                emp = new Employee(rs.getInt("id"), rs.getString("name"), rs.getString("email"), rs.getDouble("salary"));
             }
-        } catch (Exception e) { e.printStackTrace(); }
-        return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return emp;
     }
 
     public boolean updateEmployee(Employee emp) {
-        String sql = "UPDATE employees SET name=?, email=?, salary=? WHERE id=?";
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        boolean rowUpdated = false;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement("UPDATE employees SET name=?, email=?, salary=? WHERE id=?")) {
             ps.setString(1, emp.getName());
             ps.setString(2, emp.getEmail());
             ps.setDouble(3, emp.getSalary());
             ps.setInt(4, emp.getId());
-            return ps.executeUpdate() > 0;
+            rowUpdated = ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
         }
-    }
-
-    // --- DAY 7 NEW METHOD ---
-    public boolean deleteEmployee(int id) {
-        String sql = "DELETE FROM employees WHERE id = ?";
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public static void main(String[] args) {
-        EmployeeDAO dao = new EmployeeDAO();
-
-        // 1. Create a temp employee to delete
-        System.out.println("--- Adding Temp Employee for Delete Test ---");
-        Employee temp = new Employee("TestDelete", "delete@test.com", 10000);
-        dao.addEmployee(temp);
-
-        // Find its ID (last added)
-        java.util.List<Employee> all = dao.getAllEmployees();
-        int lastId = all.get(all.size() - 1).getId();
-        System.out.println("Created ID: " + lastId);
-
-        // 2. Show all before delete
-        System.out.println("\n--- Before Delete ---");
-        for (Employee e : dao.getAllEmployees()) System.out.println(e);
-
-        // 3. Delete
-        if (dao.deleteEmployee(lastId)) {
-            System.out.println("\n✅ Deleted ID " + lastId + " Successfully!");
-        }
-
-        // 4. Show all after delete
-        System.out.println("\n--- After Delete ---");
-        for (Employee e : dao.getAllEmployees()) System.out.println(e);
-
-        System.out.println("\n✅ Day 7 - Full CRUD Success! JDBC Part Completed!");
+        return rowUpdated;
     }
 }

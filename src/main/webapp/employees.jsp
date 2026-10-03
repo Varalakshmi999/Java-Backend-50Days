@@ -23,7 +23,10 @@
 <td>${emp.name}</td>
 <td>${emp.email}</td>
 <td>${emp.salary}</td>
-<td><a class="del" href="delete-employee?id=${emp.id}">Delete</a></td>
+<td>
+<a href="edit-employee?id=${emp.id}" style="background:#2196F3;color:white;padding:6px 12px;text-decoration:none;border-radius:5px;">Edit</a>
+<a class="del" href="delete-employee?id=${emp.id}">Delete</a>
+</td>
 </tr>
 </c:forEach>
 </table>
